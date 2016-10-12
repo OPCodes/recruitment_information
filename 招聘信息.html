@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    
+    a {
+        text-decoration: none;
+    }
+    
+    .clearfix:after {
+        content: "";
+        display: block;
+        clear: both;
+    }
+    
+    .clearfix {
+        zoom: 1;
+    }
+    
+    #main {
+        width: 800px;
+        height: 800px;
+        border: 1px dashed #000;
+        margin: 0 auto;
+    }
+    
+    #pageBox span,
+    #pageBox a {
+        width: 50px;
+        height: 20px;
+        text-align: center;
+        background-color: #666;
+        margin: 0 5px;
+        cursor: pointer;
+    }
+    
+    #pageBox span {
+        display: inline-block;
+    }
+    
+    #pageBox span.actColor {
+        background-color: red;
+    }
+    
+    #pageBox a {
+        float: left;
+        color: #fff;
+    }
+    
+    #pages {
+        float: left;
+    }
+    
+    #info .block span {
+        padding: 20px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    #info .gays {
+        padding: 20px;
+        color: #666;
+    }
+    
+    #info .gays a {
+        font-size: 12px;
+        padding: 10px;
+        color: #328fbe;
+    }
+    
+    #leftBox {
+        width: 100px;
+        float: left;
+        text-align: center;
+    }
+    
+    #leftBox a {
+        display: block;
+        line-height: 50px;
+        background-color: #ccc;
+        margin-bottom: 10px;
+    }
+    
+    #leftBox a.red {
+        background-color: red;
+        color: #fff;
+    }
+    
+    #rightBox {
+        width: 700px;
+        float: right;
+    }
+    
+    #rightBox h3 {
+        line-height: 50px;
+        background-color: yellow;
+        width: 100px;
+        text-align: center;
+    }
+    </style>
+    <script type="text/javascript" src="data.js"></script>
+    <script type="text/javascript" src="getTag.js"></script>
+</head>
+
+<body>
+    <div id="main">
+        <div id="leftBox">
+            <a href="?world">社会招聘</a>
+            <a href="?school">校园招聘</a>
+        </div>
+        <div id="rightBox">
+            <h3></h3>
+            <div id="info"></div>
+            <div id="pageBox" class="clearfix">
+                <a href="javascript:;" id="prev">prev</a>
+                <div id="pages"></div>
+                <a href="javascript:;" id="next">next</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    
+    var leftBox = document.getElementById("leftBox");
+    var allA = leftBox.getElementsByTagName("a");
+    var rightBox = document.getElementById("rightBox");
+    var oH3 = rightBox.getElementsByTagName("h3")[0];
+    var info = document.getElementById("info");
+    var pages = document.getElementById("pages");
+    var prev = document.getElementById("prev");
+    var next = document.getElementById("next");
+    var aA = pages.getElementsByTagName("a");
+    var old = 0;
+    var num = null;
+
+    // 获取search和hash值
+    var search = window.location.search;
+    var hash = window.location.hash;
+
+    // 生成带a标签的字符串str
+    function appendA(num){
+        var str = "";
+        for( var i = 0; i < num; i++ ){
+            str += "<a>"+ (i+1) +"</a>";
+        }
+        return str;
+    }
+
+    // 根据传入的num来选择渲染哪一页内容，num对应页码
+    function insertInfoFn(num){
+        info.innerHTML = "";
+
+        for( var i = num*5; i < (num+1)*5; i++ ){
+
+            if( !data[search][i] ) break;
+            var newDiv = document.createElement("div");
+            var newP = document.createElement("p");
+            newP.setAttribute("class","block");
+            newP.innerHTML = "<span>"+ data[search][i].num +"</span><span>职位需求："+ data[search][i].job + "</span><span>需求人数："+ data[search][i].pNum +"名</span><span>"+ data[search][i].data + "</span>";
+            newDiv.appendChild(newP);
+
+            var newP = document.createElement("p");
+            newP.setAttribute("class","gays");
+            newP.innerHTML = "<span>"+ data[search][i].ask +"</span>";
+
+            var newA = document.createElement("a");
+            newA.setAttribute("href","javascript:void(0);")
+            newA.innerHTML = "【查看详情】";
+            newP.appendChild(newA);
+            newDiv.appendChild(newP);
+            
+            info.appendChild(newDiv);
+        }
+    }
+
+
+    // search不存在的时候，设置初始状态
+    if( !search ){
+        window.location.href += allA[0].getAttribute("href");
+        allA[0].className = 'red';
+        oH3.innerHTML = "社会招聘";
+    } else { // search存在的时候取到search ?后边的内容
+        search = search.slice(1);
+    }
+
+    // 根据数据算出页数
+    var pageNum = Math.ceil(data[search].length/5);
+
+    // hash值不存在的时候，设置初始状态
+    if( !hash ){
+        window.location.hash += "page=1";
+        insertInfoFn(0);
+        pages.innerHTML = appendA(pageNum);
+        aA[0].style.background = "red";
+    } else { // hash存在的时候，根据hash的值渲染对应的页面
+        hash = hash.slice(1);
+        num = Number(hash.charAt(hash.length-1));
+        insertInfoFn(num-1);
+        pages.innerHTML = appendA(pageNum);
+        aA[num-1].style.background = "red";
+        old = num-1;
+    } 
+
+    if( search == "world" ){
+        allA[0].setAttribute("class","red");
+        oH3.innerHTML = "社会招聘";
+    } else {
+        allA[1].setAttribute("class","red");
+        oH3.innerHTML = "校园招聘";
+    }
+
+    for( var i = 0; i < aA.length; i++ ){
+        aA[i].index = i;
+        aA[i].onclick = function (){
+            aA[old].style.background = "";
+            this.style.background = "red";
+            insertInfoFn(this.index);
+            window.location.hash = "page="+(this.index+1);
+            old = this.index;
+        }
+    }
+
+    // 上一页
+    prev.onclick = function (){
+        var hash = window.location.hash;
+        var page = Number(hash.charAt(hash.length-1));
+
+        if( page === 1 ){
+            insertInfoFn(0);
+            window.location.hash = "#page="+1;
+            aA[old].style.background = "";
+            aA[0].style.background = "red";
+            old = 0;
+        } else {
+            insertInfoFn(page-2);
+            window.location.hash = "#page="+(page-1);
+            aA[page-2].style.background = "red";
+            aA[old].style.background = "";
+            old = page-2;
+        }
+    }
+
+    // 下一页
+    next.onclick = function (){
+        var hash = window.location.hash;
+        var page = Number(hash.charAt(hash.length-1));
+
+        if( page === pageNum ){
+            insertInfoFn(pageNum-1);
+            window.location.hash = "#page="+pageNum;
+            aA[old].style.background = "";
+            aA[pageNum-1].style.background = "red";
+            old = pageNum-1;
+        } else {
+            insertInfoFn(page);
+            window.location.hash = "#page="+(page+1);
+            aA[page].style.background = "red";
+            aA[old].style.background = "";
+            old = page;
+        }
+    }
+
+</script>
